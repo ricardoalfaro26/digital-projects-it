@@ -355,7 +355,6 @@ import {
   Popover,
   Divider,
   Card,
-  // Chip,
 } from "@mui/material";
 
 import { NavBar } from "../components/NavBar";
@@ -373,47 +372,26 @@ import { TableHome } from "./tableHome/TableHome";
 
 dayjs.locale("es");
 
-type HomeFiltersState = {
-  [key: string]: string;
-  fechaRango: string;
-  busqueda: string;
-};
+type HomeFiltersState = { [key: string]: string; fechaRango: string; busqueda: string; };
 
 const formatDate = (d: Dayjs | null) => (d ? d.format("DD/MM/YYYY") : "");
-
 const buildRangeText = (start: Dayjs | null, end: Dayjs | null) => {
   const s = formatDate(start);
   const e = formatDate(end);
   if (!s && !e) return "";
-  if (s && !e) return `${s} -`;
   return `${s} - ${e}`;
 };
 
 export const Home = () => {
-  // --- Constantes de Estilo ---
-  const CONTROL_HEIGHT = 36; // Altura exacta para que coincida con botones small/medium
+  const CONTROL_HEIGHT = 40;
 
   const commonInputSx = {
-    // Aplicamos al root del TextField
     height: CONTROL_HEIGHT,
-    "& .MuiInputBase-root": {
-      height: CONTROL_HEIGHT,
-      minHeight: CONTROL_HEIGHT, // 👈 CRUCIAL: Esto sobreescribe el 56px de MUI
-      borderRadius: 2,
-      boxSizing: "border-box",
-    },
-    "& .MuiInputBase-input": {
-      height: CONTROL_HEIGHT,
-      padding: "0 14px !important", // Resetea paddings internos
-      boxSizing: "border-box",
-      fontSize: 13,
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-      "& legend": { display: "none" }, // Elimina el espacio del label interno
-    },
+    "& .MuiInputBase-root": { height: CONTROL_HEIGHT, minHeight: CONTROL_HEIGHT, borderRadius: 2, boxSizing: "border-box" },
+    "& .MuiInputBase-input": { height: CONTROL_HEIGHT, padding: "0 14px !important", boxSizing: "border-box", fontSize: 13 },
+    "& .MuiOutlinedInput-notchedOutline": { "& legend": { display: "none" } },
   };
 
-  // --- Estados ---
   const [startDate, setStartDate] = useState<Dayjs | null>(dayjs());
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   const [filters, setFilters] = useState<HomeFiltersState>({
@@ -421,172 +399,121 @@ export const Home = () => {
     busqueda: "",
   });
 
-  // Estado para el Popover (Opción recomendada por MUI)
   const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   const openCalendar = Boolean(anchorEl);
 
   const [draftStart, setDraftStart] = useState<Dayjs | null>(startDate);
   const [draftEnd, setDraftEnd] = useState<Dayjs | null>(endDate);
 
-  // --- Handlers ---
-  const handleFieldChange = (identifier: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [identifier]: value }));
-  };
-
-  const handleMostrar = () => {
-    console.log("Filtros:", filters);
-  };
-
+  const handleFieldChange = (id: string, val: string) => setFilters((prev) => ({ ...prev, [id]: val }));
   const rangeText = useMemo(() => buildRangeText(startDate, endDate), [startDate, endDate]);
+  
+  // ✅ Se usará en el encabezado del Popover
   const draftRangeText = useMemo(() => buildRangeText(draftStart, draftEnd), [draftStart, draftEnd]);
 
   const handleSelectDate = (picked: Dayjs | null) => {
     if (!picked) return;
-    if (!draftStart || draftEnd) {
-      setDraftStart(picked.startOf("day"));
-      setDraftEnd(null);
-    } else if (picked.isBefore(draftStart)) {
-      setDraftStart(picked);
-      setDraftEnd(null);
-    } else {
-      setDraftEnd(picked);
-    }
+    if (!draftStart || draftEnd) { setDraftStart(picked.startOf("day")); setDraftEnd(null); }
+    else if (picked.isBefore(draftStart)) { setDraftStart(picked); setDraftEnd(null); }
+    else { setDraftEnd(picked); }
   };
 
   const handleAplicar = () => {
-    setStartDate(draftStart);
-    setEndDate(draftEnd);
-    setFilters((prev) => ({
-      ...prev,
-      fechaRango: buildRangeText(draftStart, draftEnd),
-    }));
+    setStartDate(draftStart); setEndDate(draftEnd);
+    setFilters((prev) => ({ ...prev, fechaRango: buildRangeText(draftStart, draftEnd) }));
     setAnchorEl(null);
   };
 
   return (
-    <>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
       <NavBar />
-      <Box sx={{ display: "flex", bgcolor: "#F8F9FA", minHeight: "100vh" }}>
+
+      <Box sx={{ display: "flex", flexGrow: 1, overflow: "hidden", bgcolor: "#F8F9FA" }}>
         <LeftFormsMenu />
-        <Box sx={{ flex: 1, p: 3, maxWidth: "1400px", mx: "auto" }}>
-          
-          <Typography variant="h5" fontWeight={700} mb={3}>
-            Prospección de clientes
-          </Typography>
 
-          {/* 🔥 KPIs */}
-          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-            {[
-              { label: "Solicitudes hoy", value: 124 },
-              { label: "Aprobadas", value: 80 },
-              { label: "Pendientes", value: 44 },
-            ].map((item) => (
-              <Card key={item.label} sx={{ flex: 1, p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}>
-                <Typography variant="body2" color="text.secondary">{item.label}</Typography>
-                <Typography variant="h5" fontWeight={700}>{item.value}</Typography>
-              </Card>
-            ))}
+        <Box 
+          component="main" 
+          sx={{ 
+            flexGrow: 1, 
+            overflowY: "auto", 
+            p: 3, 
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            gap: 3
+          }}
+        >
+          <Box sx={{ maxWidth: "1400px", mx: "auto", width: "100%" }}>
+            <Typography variant="h5" fontWeight={700} mb={3}>Prospección de clientes</Typography>
+
+            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+              {[
+                { label: "Solicitudes hoy", value: 124 },
+                { label: "Aprobadas", value: 80 },
+                { label: "Pendientes", value: 44 },
+              ].map((item) => (
+                <Card key={item.label} sx={{ flex: 1, p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}>
+                  <Typography variant="body2" color="text.secondary">{item.label}</Typography>
+                  <Typography variant="h5" fontWeight={700}>{item.value}</Typography>
+                </Card>
+              ))}
+            </Box>
+
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB", mb: 3 }}>
+              <Typography fontWeight={600} mb={2}>Filtros</Typography>
+              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+                <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end", flexWrap: "wrap" }}>
+                  <Box sx={{ width: 280 }}>
+                    <Typography variant="caption" fontWeight={600} sx={{ mb: 0.5, display: 'block', ml: 0.5 }}>Fecha</Typography>
+                    <FormInput identifier="fechaRango" label="" value={rangeText} onValueChange={handleFieldChange}
+                      textFieldProps={{ 
+                        size: "small", 
+                        fullWidth: true, 
+                        inputProps: { readOnly: true },
+                        // ✅ Tipado correcto para evitar el error de 'any'
+                        onClick: (e: React.MouseEvent<HTMLDivElement>) => setAnchorEl(e.currentTarget), 
+                        sx: commonInputSx 
+                      }} />
+                  </Box>
+                  <Box sx={{ width: 280 }}>
+                    <Typography variant="caption" fontWeight={600} sx={{ mb: 0.5, display: 'block', ml: 0.5 }}>Cliente</Typography>
+                    <FormInput identifier="busqueda" label="" value={filters.busqueda} onValueChange={handleFieldChange}
+                      textFieldProps={{ size: "small", fullWidth: true, sx: commonInputSx }} />
+                  </Box>
+                  <Button variant="contained" sx={{ height: CONTROL_HEIGHT, px: 4, borderRadius: 2, bgcolor: "#1A73E8", fontWeight: 600, textTransform: "none", boxShadow: "none", "&:hover": { bgcolor: "#1558B0" } }}>Buscar</Button>
+                </Box>
+              </LocalizationProvider>
+            </Paper>
+
+            <Card sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}>
+              <Typography fontWeight={600} mb={2}>Resultados</Typography>
+              <TableHome />
+            </Card>
           </Box>
-
-          {/* 🔥 FILTROS */}
-          <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB", mb: 3 }}>
-            <Typography fontWeight={600} mb={2}>Filtros</Typography>
-
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
-              <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end", flexWrap: "wrap" }}>
-                
-                {/* 📅 Fecha */}
-                <Box sx={{ width: 280 }}>
-                  <Typography variant="caption" fontWeight={600} sx={{ mb: 0.5, display: 'block', ml: 0.5 }}>
-                    Fecha
-                  </Typography>
-                  <FormInput
-                    identifier="fechaRango"
-                    label="" // 👈 Agregado para cumplir con FormInputProps (TS Error 2741)
-                    value={rangeText}
-                    onValueChange={handleFieldChange}
-                    textFieldProps={{
-                      size: "small",
-                      fullWidth: true,
-                      inputProps: { readOnly: true },
-                      onClick: (e: React.MouseEvent<HTMLDivElement>) => setAnchorEl(e.currentTarget),
-                      sx: commonInputSx, // 👈 Aplicado correctamente (TS Error 6133)
-                    }}
-                  />
-                </Box>
-
-                {/* 🔍 Cliente */}
-                <Box sx={{ width: 280 }}>
-                  <Typography variant="caption" fontWeight={600} sx={{ mb: 0.5, display: 'block', ml: 0.5 }}>
-                    Cliente
-                  </Typography>
-                  <FormInput
-                    identifier="busqueda"
-                    label="" // 👈 Agregado para cumplir con FormInputProps (TS Error 2741)
-                    value={filters.busqueda}
-                    onValueChange={handleFieldChange}
-                    textFieldProps={{
-                      size: "small",
-                      fullWidth: true,
-                      sx: commonInputSx, // 👈 Aplicado correctamente (TS Error 6133)
-                    }}
-                  />
-                </Box>
-
-                <Button
-                  variant="contained"
-                  onClick={handleMostrar}
-                  sx={{
-                    height: CONTROL_HEIGHT,
-                    px: 4,
-                    borderRadius: 2,
-                    bgcolor: "#1A73E8",
-                    fontWeight: 600,
-                    textTransform: "none",
-                    boxShadow: "none",
-                    "&:hover": { bgcolor: "#1558B0", boxShadow: "none" },
-                  }}
-                >
-                  Buscar
-                </Button>
-              </Box>
-
-              {/* ... Chips y Popover */}
-            </LocalizationProvider>
-          </Paper>
-
-          {/* 🔥 TABLA */}
-          <Card sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}>
-            <Typography fontWeight={600} mb={2}>Resultados</Typography>
-            <TableHome />
-          </Card>
         </Box>
       </Box>
 
-      {/* 🔥 POPOVER */}
-      <Popover
-        open={openCalendar}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-      >
+      {/* Popover Calendario */}
+      <Popover open={openCalendar} anchorEl={anchorEl} onClose={() => setAnchorEl(null)} anchorOrigin={{ vertical: "bottom", horizontal: "left" }}>
         <Box sx={{ p: 2 }}>
-          <Typography fontWeight={600} mb={1}>Selecciona rango</Typography>
-          <Typography fontSize={12} color="text.secondary" mb={1}>{draftRangeText}</Typography>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+            <Typography fontWeight={600}>Selecciona rango</Typography>
+            {/* ✅ Aquí usamos draftRangeText para resolver el error de 'unused variable' */}
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+              {draftRangeText}
+            </Typography>
+          </Box>
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ display: "flex", gap: 2 }}>
-            <DateCalendar value={draftStart} onChange={(d) => handleSelectDate(d)} />
-            <DateCalendar value={draftEnd} onChange={(d) => handleSelectDate(d)} />
+            <DateCalendar value={draftStart} onChange={handleSelectDate} />
+            <DateCalendar value={draftEnd} onChange={handleSelectDate} />
           </Box>
-          <Divider sx={{ my: 2 }} />
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
             <Button onClick={() => setAnchorEl(null)}>Cancelar</Button>
-            <Button variant="contained" onClick={handleAplicar} disabled={!draftStart || !draftEnd}>
-              Aplicar
-            </Button>
+            <Button variant="contained" onClick={handleAplicar} sx={{ ml: 1 }}>Aplicar</Button>
           </Box>
         </Box>
       </Popover>
-    </>
+    </Box>
   );
 };

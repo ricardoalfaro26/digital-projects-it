@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 // ✅ Formularios (crealos en ./pages o ajusta el path de import)
 import { PrecalificationForm } from "./pages/precalificationForm";
 import {SolicitudeForm} from "./pages/solicitudeForm.tsx";
+import { MainTratamientoPage } from "./pages/MainTratamientoForm";
 import {IngresosPorVentas} from "./pages/evaluacion-economica/ingresosPorVentas.tsx";
 import {MargenGananciaV2Form} from "./pages/evaluacion-economica/margenGanancia.tsx";
 import {EgresosOperativos} from "./pages/evaluacion-economica/egresosIOpertivos.tsx";
@@ -64,7 +65,15 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
- <Route
+                    <Route
+                        path="/forms/gestion"
+                        element={
+                            <ProtectedRoute>
+                                <MainTratamientoPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/forms/evaluacion-economica/ingresos-ventas"
                         element={
                             <ProtectedRoute>
