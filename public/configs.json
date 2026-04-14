@@ -1,0 +1,14 @@
+{
+    "services": {
+        "storage": {
+            "baseUrl": "",
+            "auth": {
+                "login": "auth/login"
+            },
+            "expedient": {
+                "getRootFolders": "folders",
+                "download": "folders/download"
+            }
+        }
+    }
+}
