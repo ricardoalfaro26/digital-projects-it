@@ -1,14 +1,17 @@
-// src/pages/Home/Detalle/DetalleSolicitud.tsx
 import React, { useState } from "react";
 import { 
-    Box, Typography, Button, IconButton, Paper, Grid, 
-    Stack, List, ListItemButton, ListItemText, Divider 
+    Box, Typography, IconButton, Paper, Grid, 
+    Stack, List, ListItemButton, ListItemText, Divider, Button 
 } from "@mui/material";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import EditIcon from '@mui/icons-material/Edit';
 
-// Importación de tipos
+// Importación de Tipos
 import type { HomeRow } from "../TableHome";
+
+// Importación de Secciones (Formularios)
+import { PrecalificacionSection } from "./sections/PrecalificacionSection";
+import { SolicitudSection } from "./sections/SolicitudSection";
+import { FlujoSection } from "./sections/FlujoSection";
 
 type TabType = "seguimiento" | "flujo" | "docs";
 
@@ -32,103 +35,132 @@ export const DetalleSolicitud: React.FC<Props> = ({ client, initialTab, onBack }
     const [activeStep, setActiveStep] = useState('precalificacion');
     const ORANGE_PRIMARY = "#F58025";
 
-    const renderContent = () => {
-        if (activeTab === 'flujo') return <Typography variant="body2" color="text.secondary">Vista de Gráfica de Flujo</Typography>;
-        if (activeTab === 'docs') return <Typography variant="body2" color="text.secondary">Vista de Documentos PDF</Typography>;
+    // Solución para el ID (#) sin usar 'any'
+    const clientData = client as HomeRow & { '#': string | number };
+    const requestId = clientData['#'] || "N/A";
+
+    const renderMainContent = () => {
+        if (activeTab === 'flujo') return <FlujoSection />;
+        
+        if (activeTab === 'docs') {
+            return (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                    <Typography variant="h6" color="text.secondary">📄 Expediente Digital</Typography>
+                    <Typography variant="caption">Lista de documentos PDF adjuntos a la solicitud.</Typography>
+                </Box>
+            );
+        }
 
         switch (activeStep) {
-            case 'precalificacion': return <Typography>Formulario de Precalificación...</Typography>;
-            case 'solicitud': return <Typography>Formulario de Solicitud...</Typography>;
-            case 'evaluacion': return <Typography>Árbol de Evaluación Económica...</Typography>;
-            default: return <Typography>Seleccione un paso</Typography>;
+            case 'precalificacion': return <PrecalificacionSection />;
+            case 'solicitud': return <SolicitudSection />;
+            default: return <Typography sx={{ p: 2 }}>Módulo en desarrollo...</Typography>;
         }
     };
 
     return (
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%", bgcolor: "#F4F6F8" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", bgcolor: "#F4F6F8" }}>
+            
             <Box sx={{ bgcolor: "#fff", borderBottom: "1px solid #E5E7EB", p: 1.5, display: 'flex', alignItems: 'center', gap: 2 }}>
                 <IconButton onClick={onBack} size="small" sx={{ bgcolor: '#f0f0f0' }}>
                     <ArrowBackIosNewIcon sx={{ fontSize: 14 }} />
                 </IconButton>
-                <Typography variant="body2" fontWeight={600} color="text.secondary">Seguimiento de solicitud</Typography>
+                <Typography variant="body2" fontWeight={600} color="text.secondary">
+                    {activeTab === 'seguimiento' ? 'Seguimiento de solicitud' : 
+                     activeTab === 'flujo' ? 'Gráfica de flujo' : 'Documentación'}
+                </Typography>
             </Box>
 
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: 3, flexGrow: 1, overflowY: 'auto' }}>
+                
                 <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 2, border: "1px solid #E5E7EB" }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Box>
                             <Typography variant="subtitle1" fontWeight={800}>Cliente: {client.cliente}</Typography>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                A cargo de <b>{client.gestor}</b> • {client.tipoSolicitud}
+                                A cargo de <b>{client.gestor}</b> • {client.tipoSolicitud} • <span style={{color: ORANGE_PRIMARY}}>ID: {requestId}</span>
                             </Typography>
                         </Box>
-                        <IconButton size="small" sx={{ border: '1px solid #eee' }}><EditIcon fontSize="small" /></IconButton>
+                        
+                        <Stack direction="row" spacing={1}>
+                             {(['seguimiento', 'flujo', 'docs'] as TabType[]).map((t) => (
+                                <Button 
+                                    key={t}
+                                    variant={activeTab === t ? "contained" : "outlined"}
+                                    size="small"
+                                    onClick={() => setActiveTab(t)}
+                                    sx={{ 
+                                        fontSize: 10, borderRadius: 2, px: 2,
+                                        bgcolor: activeTab === t ? ORANGE_PRIMARY : 'transparent',
+                                        color: activeTab === t ? '#fff' : ORANGE_PRIMARY,
+                                        borderColor: ORANGE_PRIMARY,
+                                        '&:hover': { bgcolor: activeTab === t ? ORANGE_PRIMARY : '#FFF4E5', borderColor: ORANGE_PRIMARY }
+                                    }}
+                                >
+                                    {t === 'docs' ? 'Documentos' : t.charAt(0).toUpperCase() + t.slice(1)}
+                                </Button>
+                             ))}
+                        </Stack>
                     </Stack>
                 </Paper>
 
-                {/* ✅ SOLUCIÓN: Usamos 'size' en lugar de 'item xs md' */}
                 <Grid container spacing={3}>
                     
-                    {/* MENÚ PASOS */}
-                    <Grid size={{ xs: 12, md: 2.5 }}>
-                        <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid #E5E7EB", overflow: 'hidden' }}>
-                            <List sx={{ p: 0 }}>
-                                {STEPS.map((step) => (
-                                    <ListItemButton 
-                                        key={step.id} 
-                                        onClick={() => { setActiveStep(step.id); setActiveTab('seguimiento'); }}
-                                        sx={{
-                                            py: 2,
-                                            borderLeft: activeStep === step.id ? `4px solid ${ORANGE_PRIMARY}` : '4px solid transparent',
-                                            bgcolor: activeStep === step.id ? '#FFF4E5' : 'transparent',
-                                            '&:hover': { bgcolor: activeStep === step.id ? '#FFF4E5' : '#f9f9f9' }
-                                        }}
-                                    >
-                                        <ListItemText 
-                                            primary={step.label} 
-                                            primaryTypographyProps={{ fontSize: 11, fontWeight: 800, color: activeStep === step.id ? ORANGE_PRIMARY : 'text.primary' }} 
-                                        />
-                                    </ListItemButton>
-                                ))}
-                            </List>
-                        </Paper>
-                    </Grid>
-
-                    {/* CONTENIDO CENTRAL */}
-                    <Grid size={{ xs: 12, md: 6.5 }}>
-                        <Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: "1px solid #E5E7EB", minHeight: '600px' }}>
-                            <Typography variant="h6" fontWeight={700} mb={2} sx={{ textTransform: 'uppercase', fontSize: 16 }}>
-                                {activeStep.replace('-', ' ')}
-                            </Typography>
-                            <Divider sx={{ mb: 3 }} />
-                            {renderContent()}
-                        </Paper>
-                    </Grid>
-
-                    {/* PANEL DERECHO */}
-                    <Grid size={{ xs: 12, md: 3 }}>
-                        <Stack spacing={3}>
-                            <Paper elevation={0} sx={{ p: 0.5, bgcolor: '#F0F2F5', borderRadius: 2, display: 'flex', gap: 0.5 }}>
-                                {(['seguimiento', 'flujo', 'docs'] as TabType[]).map((t) => (
-                                    <Button 
-                                        key={t} fullWidth size="small" onClick={() => setActiveTab(t)}
-                                        sx={{ 
-                                            fontSize: 10, fontWeight: 700, textTransform: 'none',
-                                            bgcolor: activeTab === t ? '#fff' : 'transparent',
-                                            color: activeTab === t ? ORANGE_PRIMARY : 'text.secondary',
-                                            boxShadow: activeTab === t ? '0px 2px 4px rgba(0,0,0,0.05)' : 'none'
-                                        }}
-                                    >
-                                        {t === 'docs' ? 'Docs' : t.charAt(0).toUpperCase() + t.slice(1)}
-                                    </Button>
-                                ))}
+                    {/* ✅ CORRECCIÓN: Se usa 'size' en lugar de 'item xs md' */}
+                    {activeTab === 'seguimiento' && (
+                        <Grid size={{ xs: 12, md: 2.5 }}>
+                            <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid #E5E7EB", overflow: 'hidden' }}>
+                                <List sx={{ p: 0 }}>
+                                    {STEPS.map((step) => (
+                                        <ListItemButton 
+                                            key={step.id} 
+                                            onClick={() => setActiveStep(step.id)}
+                                            sx={{
+                                                py: 2,
+                                                borderLeft: activeStep === step.id ? `4px solid ${ORANGE_PRIMARY}` : '4px solid transparent',
+                                                bgcolor: activeStep === step.id ? '#FFF4E5' : 'transparent',
+                                            }}
+                                        >
+                                            <ListItemText 
+                                                primary={step.label} 
+                                                primaryTypographyProps={{ fontSize: 11, fontWeight: 800, color: activeStep === step.id ? ORANGE_PRIMARY : 'text.primary' }} 
+                                            />
+                                        </ListItemButton>
+                                    ))}
+                                </List>
                             </Paper>
+                        </Grid>
+                    )}
+
+                    {/* ✅ CORRECCIÓN: Se usa 'size' dinámico */}
+                    <Grid size={{ xs: 12, md: activeTab === 'seguimiento' ? 6.5 : 9.5 }}>
+                        <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid #E5E7EB", minHeight: '650px' }}>
+                            <Box sx={{ p: 2 }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ textTransform: 'uppercase', color: '#6B7280' }}>
+                                    {activeTab === 'seguimiento' ? activeStep.replace('-', ' ') : activeTab}
+                                </Typography>
+                            </Box>
+                            <Divider />
+                            <Box sx={{ p: 3 }}>
+                                {renderMainContent()}
+                            </Box>
+                        </Paper>
+                    </Grid>
+
+                    {/* ✅ CORRECCIÓN: Se usa 'size' en el panel derecho */}
+                    <Grid size={{ xs: 12, md: activeTab === 'seguimiento' ? 3 : 2.5 }}>
+                        <Stack spacing={3}>
                             <Paper elevation={0} sx={{ p: 2, border: "1px solid #E5E7EB", textAlign: 'center', borderRadius: 2 }}>
                                 <Typography variant="h5" color="error" fontWeight={900}>6 días</Typography>
-                                <Typography variant="caption" fontWeight={700} color="text.secondary">Recopilación</Typography>
+                                <Typography variant="caption" fontWeight={700} color="text.secondary">TIEMPO EN ETAPA ACTUAL</Typography>
+                            </Paper>
+                            <Paper elevation={0} sx={{ p: 2, border: "1px solid #E5E7EB", borderRadius: 2, bgcolor: '#F9FAFB' }}>
+                                <Typography variant="caption" fontWeight={800} color="text.secondary" display="block" sx={{ mb: 1 }}>NOTAS</Typography>
+                                <Typography variant="caption" sx={{ color: '#4B5563', fontStyle: 'italic' }}>Información validada el 17/04/2026.</Typography>
                             </Paper>
                         </Stack>
                     </Grid>
+
                 </Grid>
             </Box>
         </Box>
