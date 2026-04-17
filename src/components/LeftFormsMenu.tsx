@@ -18,7 +18,7 @@ const OPEN_BG = "rgba(0,0,0,0.04)";
 type MenuItem = { label: string; path: string; };
 
 const FORM_MENU_ITEMS: MenuItem[] = [
-  { label: "INICIO", path: "/" },
+  { label: "INICIO", path: "../pages" },
 ];
 
 export const LeftFormsMenu: React.FC = () => {

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CssBaseline } from "@mui/material";
-import { Home } from "./pages";
+import { Home } from "./pages/Home/Home";
 import Login from "./pages/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 

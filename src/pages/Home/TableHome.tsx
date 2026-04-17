@@ -131,7 +131,11 @@ export const TableHome = ({ onAction }: TableHomeProps) => {
                                 <TableCell align="center">
                                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                                         <Tooltip title="Seguimiento">
-                                            <IconButton size="small" onClick={() => onAction(r, 'seguimiento')} sx={{ border: "1px solid #eee", color: '#1A73E8' }}>
+                                            <IconButton 
+                                                size="small" 
+                                                onClick={() => onAction(r, 'seguimiento')} // <--- Esta es la "llamada"
+                                                sx={{ border: "1px solid #eee", color: '#1A73E8' }}
+                                            >
                                                 <VisibilityOutlinedIcon fontSize="small" />
                                             </IconButton>
                                         </Tooltip>
