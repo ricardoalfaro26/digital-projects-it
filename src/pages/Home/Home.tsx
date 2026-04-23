@@ -6,7 +6,6 @@ import { LeftFormsMenu } from "../../components/LeftFormsMenu";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
-// ✅ Asegúrate de que el archivo ProspeccionDashboard.tsx esté guardado en la misma carpeta
 import { ProspeccionDashboard } from "./ProspeccionDashboard"; 
 import { DetalleSolicitud } from "./Detalle/DetalleSolicitud";
 import type { HomeRow } from "./TableHome";
@@ -36,7 +35,7 @@ export const Home = () => {
                             <ProspeccionDashboard onAction={handleAction} />
                         ) : (
                             <DetalleSolicitud 
-                                client={selectedClient} 
+                                clientId={selectedClient.id}
                                 initialTab={activeTab} 
                                 onBack={() => setSelectedClient(null)} 
                             />

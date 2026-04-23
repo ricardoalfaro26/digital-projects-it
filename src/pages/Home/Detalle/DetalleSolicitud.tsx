@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
     Box, Typography, IconButton, Paper, Grid, 
     Stack, List, ListItemButton, ListItemText, Divider, Button 
@@ -6,7 +6,10 @@ import {
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 
 // Importación de Tipos
-import type { HomeRow } from "../TableHome";
+// import type { HomeRow } from "../TableHome";
+import type { Detalle } from "../../../types/Detalle/detalle";
+
+import { getActivityById } from "../../../services/detalle.service";
 
 // Importación de Secciones (Formularios)
 import { PrecalificacionSection } from "./sections/PrecalificacionSection";
@@ -16,7 +19,7 @@ import { FlujoSection } from "./sections/FlujoSection";
 type TabType = "seguimiento" | "flujo" | "docs";
 
 interface Props {
-    client: HomeRow;
+    clientId: number;
     initialTab: TabType;
     onBack: () => void;
 }
@@ -30,14 +33,42 @@ const STEPS = [
     { id: 'garantes', label: 'GARANTES' },
 ];
 
-export const DetalleSolicitud: React.FC<Props> = ({ client, initialTab, onBack }) => {
+export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack }) => {
+    const [detalle, setDetalle] = useState<Detalle | null>(null);
+    const [loading, setLoading] = useState(true);
+
     const [activeTab, setActiveTab] = useState<TabType>(initialTab);
     const [activeStep, setActiveStep] = useState('precalificacion');
+
     const ORANGE_PRIMARY = "#F58025";
 
     // Solución para el ID (#) sin usar 'any'
-    const clientData = client as HomeRow & { '#': string | number };
-    const requestId = clientData['#'] || "N/A";
+    const requestId = Number(clientId);
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const data = await getActivityById(requestId);
+                setDetalle(data);
+            } catch (error) {
+                console.error("Error cargando detalle:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (requestId && !isNaN(requestId)) {
+            load();
+        } else {
+            console.error("❌ ID inválido:", requestId);
+        }
+    }, [requestId]);
+
+    useEffect(() => {
+        console.log("🔥 DETALLE SOLICITUD RENDERIZADO");
+        console.log("clientId:", clientId);
+        console.log("requestId:", requestId);
+    }, []);
 
     const renderMainContent = () => {
         if (activeTab === 'flujo') return <FlujoSection />;
@@ -76,10 +107,22 @@ export const DetalleSolicitud: React.FC<Props> = ({ client, initialTab, onBack }
                 <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 2, border: "1px solid #E5E7EB" }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Box>
-                            <Typography variant="subtitle1" fontWeight={800}>Cliente: {client.cliente}</Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                A cargo de <b>{client.gestor}</b> • {client.tipoSolicitud} • <span style={{color: ORANGE_PRIMARY}}>ID: {requestId}</span>
+                            <Typography variant="subtitle1" fontWeight={800}>
+                                {/* 🔥 CAMBIO: antes client.cliente → ahora backend */}
+                                Cliente: {loading ? "Cargando..." : detalle?.name}
                             </Typography>
+
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                {/* ❌ SE MANTIENE IGUAL */}
+                                {/* A cargo de <b>{clientId.gestor}</b> • {client.tipoSolicitud} •  */}
+                                A Cargo de <b>Gestor Asignado</b> • Tipo de solicitud: {detalle?.type} •
+                                <span style={{color: ORANGE_PRIMARY}}> Numero de Solicitud: {detalle?.number}</span>
+                            </Typography>
+
+                            {/* 🔥 CAMBIO OPCIONAL: mostrar nombre formateado */}
+                            {/* <Typography variant="caption" color="text.secondary">
+                                {detalle?.name}
+                            </Typography> */}
                         </Box>
                         
                         <Stack direction="row" spacing={1}>

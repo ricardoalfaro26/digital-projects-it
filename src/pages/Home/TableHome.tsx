@@ -15,6 +15,7 @@ import {
     MenuItem,
     Tooltip,
 } from "@mui/material";
+import { Dayjs } from "dayjs";
 
 // Iconos para las acciones
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -22,6 +23,7 @@ import TimelineIcon from "@mui/icons-material/Timeline";
 import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
 
 export type HomeRow = {
+    id: number;
     fecha: string;
     hora: string;
     numero: string;
@@ -38,18 +40,16 @@ type SortKey = keyof HomeRow;
 
 interface TableHomeProps {
     onAction: (client: HomeRow, tab: "seguimiento" | "flujo" | "docs") => void;
+    rows: HomeRow[];
+    cliente: string;
+    startDate: Dayjs | null;
+    endDate: Dayjs | null;
 }
 
 const money = (n: number) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-const rowsSeed: HomeRow[] = [
-    { fecha: "10 feb 2026", hora: "10:19 AM", numero: "52884N", cliente: "Pablo Javier Bengoechea Morena", etapa: "✍️", grupo: "--", tipoSolicitud: "Prospecto Cliente Empresario", monto: 7500, gestor: "ABELTRAN - ALMA ELIZABETH" },
-    { fecha: "10 feb 2026", hora: "09:01 AM", numero: "52881N", cliente: "Juan Antonio Perez Mancilla", etapa: "✍️", grupo: "--", tipoSolicitud: "Prospecto Flujo Corto", monto: 4000, gestor: "ABELTRAN - ALMA ELIZABETH" },
-    { fecha: "09 feb 2026", hora: "11:28 AM", numero: "52877N", cliente: "Pablo Javier 231065 Bengoechea", etapa: "✍️", grupo: "--", tipoSolicitud: "Prospecto Cliente Empresario", monto: 6186.48, gestor: "ABELTRAN - ALMA ELIZABETH" },
-];
-
-export const TableHome = ({ onAction }: TableHomeProps) => {
+export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: TableHomeProps) => {
     const [buscar, setBuscar] = useState("");
     const [rowsPerPage, setRowsPerPage] = useState<number>(10);
     const [orderBy, setOrderBy] = useState<SortKey>("fecha");
@@ -62,14 +62,44 @@ export const TableHome = ({ onAction }: TableHomeProps) => {
 
     const filtered = useMemo(() => {
         const q = buscar.trim().toLowerCase();
-        return q ? rowsSeed.filter(r => Object.values(r).join(" ").toLowerCase().includes(q)) : rowsSeed;
-    }, [buscar]);
+
+        return rows.filter((r) => {
+            // 🔎 filtro por buscador global
+            const matchesSearch = q
+                ? Object.values(r).join(" ").toLowerCase().includes(q)
+                : true;
+
+            // 🔎 filtro por cliente (input externo)
+            const matchesCliente = cliente
+                ? r.cliente.toLowerCase().includes(cliente.toLowerCase())
+                : true;
+
+            // 🔎 filtro por fechas
+            const rowDate = new Date(r.fecha); // ⚠️ asegúrate formato YYYY-MM-DD
+
+            const matchesStart = startDate
+                ? rowDate >= startDate.toDate()
+                : true;
+
+            const matchesEnd = endDate
+                ? rowDate <= endDate.toDate()
+                : true;
+
+            return matchesSearch && matchesCliente && matchesStart && matchesEnd;
+        });
+    }, [buscar, rows, cliente, startDate, endDate]);
 
     const sorted = useMemo(() => {
         return [...filtered].sort((a, b) => {
             const av = a[orderBy], bv = b[orderBy];
-            if (typeof av === 'number' && typeof bv === 'number') return order === "asc" ? av - bv : bv - av;
-            return order === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+
+            if (typeof av === "number" && typeof bv === "number") {
+                return order === "asc" ? av - bv : bv - av;
+            }
+
+            return order === "asc"
+                ? String(av).localeCompare(String(bv))
+                : String(bv).localeCompare(String(av));
         });
     }, [filtered, order, orderBy]);
 
@@ -101,14 +131,24 @@ export const TableHome = ({ onAction }: TableHomeProps) => {
                 <Table stickyHeader size="small">
                     <TableHead>
                         <TableRow>
-                            {["Fecha", "Hora", "#", "Cliente", "Etapa", "Grupo", "Tipo solicitud", "Monto", "Gestor"].map((label, i) => (
-                                <TableCell key={label} sx={{ fontWeight: 700, fontSize: 12, bgcolor: "#fff" }}>
+                            {[
+                                { label: "Fecha", key: "fecha" },
+                                { label: "Hora", key: "hora" },
+                                { label: "Solicitud", key: "numero" },
+                                { label: "Cliente", key: "cliente" },
+                                { label: "Etapa", key: "etapa" },
+                                { label: "Grupo", key: "grupo" },
+                                { label: "Tipo solicitud", key: "tipoSolicitud" },
+                                { label: "Monto", key: "monto" },
+                                { label: "Gestor", key: "gestor" },
+                            ].map((col) => (
+                                <TableCell key={col.key} sx={{ fontWeight: 700, fontSize: 12, bgcolor: "#fff" }}>
                                     <TableSortLabel
-                                        active={orderBy === (Object.keys(rowsSeed[0])[i] as SortKey)}
+                                        active={orderBy === col.key}
                                         direction={order}
-                                        onClick={() => handleRequestSort(Object.keys(rowsSeed[0])[i] as SortKey)}
+                                        onClick={() => handleRequestSort(col.key as SortKey)}
                                     >
-                                        {label}
+                                        {col.label}
                                     </TableSortLabel>
                                 </TableCell>
                             ))}
@@ -125,27 +165,42 @@ export const TableHome = ({ onAction }: TableHomeProps) => {
                                 <TableCell align="center">{r.etapa}</TableCell>
                                 <TableCell align="center">{r.grupo}</TableCell>
                                 <TableCell sx={{ fontSize: 12 }}>{r.tipoSolicitud}</TableCell>
-                                <TableCell align="right" sx={{ fontSize: 12, fontWeight: 700 }}>{money(r.monto)}</TableCell>
-                                <TableCell sx={{ fontSize: 11, color: "text.secondary" }}>{r.gestor}</TableCell>
+                                <TableCell align="right" sx={{ fontSize: 12, fontWeight: 700 }}>
+                                    {money(r.monto)}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: 11, color: "text.secondary" }}>
+                                    {r.gestor}
+                                </TableCell>
 
+                                {/* 🔒 SIN CAMBIOS */}
                                 <TableCell align="center">
                                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                                         <Tooltip title="Seguimiento">
-                                            <IconButton 
-                                                size="small" 
-                                                onClick={() => onAction(r, 'seguimiento')} // <--- Esta es la "llamada"
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => onAction(r, 'seguimiento')}
                                                 sx={{ border: "1px solid #eee", color: '#1A73E8' }}
                                             >
                                                 <VisibilityOutlinedIcon fontSize="small" />
                                             </IconButton>
                                         </Tooltip>
+
                                         <Tooltip title="Ver Flujo">
-                                            <IconButton size="small" onClick={() => onAction(r, 'flujo')} sx={{ border: "1px solid #eee", color: '#F57C00' }}>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => onAction(r, 'flujo')}
+                                                sx={{ border: "1px solid #eee", color: '#F57C00' }}
+                                            >
                                                 <TimelineIcon fontSize="small" />
                                             </IconButton>
                                         </Tooltip>
+
                                         <Tooltip title="Documentos">
-                                            <IconButton size="small" onClick={() => onAction(r, 'docs')} sx={{ border: "1px solid #eee", color: '#757575' }}>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => onAction(r, 'docs')}
+                                                sx={{ border: "1px solid #eee", color: '#757575' }}
+                                            >
                                                 <PrintOutlinedIcon fontSize="small" />
                                             </IconButton>
                                         </Tooltip>
