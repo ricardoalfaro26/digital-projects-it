@@ -64,11 +64,11 @@ export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack
         }
     }, [requestId]);
 
-    useEffect(() => {
-        console.log("🔥 DETALLE SOLICITUD RENDERIZADO");
-        console.log("clientId:", clientId);
-        console.log("requestId:", requestId);
-    }, []);
+    // useEffect(() => {
+    //     console.log("🔥 DETALLE SOLICITUD RENDERIZADO");
+    //     console.log("clientId:", clientId);
+    //     console.log("requestId:", requestId);
+    // }, []);
 
     const renderMainContent = () => {
         if (activeTab === 'flujo') return <FlujoSection />;
@@ -83,7 +83,7 @@ export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack
         }
 
         switch (activeStep) {
-            case 'precalificacion': return <PrecalificacionSection />;
+            case 'precalificacion': return <PrecalificacionSection id={requestId} />;
             case 'solicitud': return <SolicitudSection />;
             default: return <Typography sx={{ p: 2 }}>Módulo en desarrollo...</Typography>;
         }
@@ -194,12 +194,12 @@ export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack
                     <Grid size={{ xs: 12, md: activeTab === 'seguimiento' ? 3 : 2.5 }}>
                         <Stack spacing={3}>
                             <Paper elevation={0} sx={{ p: 2, border: "1px solid #E5E7EB", textAlign: 'center', borderRadius: 2 }}>
-                                <Typography variant="h5" color="error" fontWeight={900}>6 días</Typography>
+                                <Typography variant="h5" color="error" fontWeight={900}>{detalle?.days} días</Typography>
                                 <Typography variant="caption" fontWeight={700} color="text.secondary">TIEMPO EN ETAPA ACTUAL</Typography>
                             </Paper>
                             <Paper elevation={0} sx={{ p: 2, border: "1px solid #E5E7EB", borderRadius: 2, bgcolor: '#F9FAFB' }}>
                                 <Typography variant="caption" fontWeight={800} color="text.secondary" display="block" sx={{ mb: 1 }}>NOTAS</Typography>
-                                <Typography variant="caption" sx={{ color: '#4B5563', fontStyle: 'italic' }}>Información validada el 17/04/2026.</Typography>
+                                <Typography variant="caption" sx={{ color: '#4B5563', fontStyle: 'italic' }}>Información ingresada el {detalle?.entryDate}.</Typography>
                             </Paper>
                         </Stack>
                     </Grid>

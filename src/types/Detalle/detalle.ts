@@ -4,4 +4,6 @@ export interface Detalle {
   client: string;
   name: string;
   type: string;
+  days: number;
+  entryDate: string;
 }
