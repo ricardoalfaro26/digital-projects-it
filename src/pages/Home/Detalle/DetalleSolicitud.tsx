@@ -15,6 +15,9 @@ import { getActivityById } from "../../../services/detalle.service";
 import { PrecalificacionSection } from "./sections/PrecalificacionSection";
 import { SolicitudSection } from "./sections/SolicitudSection";
 import { FlujoSection } from "./sections/FlujoSection";
+import { DemograficoSection } from "./sections/DemograficoSection";
+import { EvaluacionSection } from "./sections/EvaluacionSection";
+// import { ReferenciasSection } from "./sections/ReferenciasSection";
 
 type TabType = "seguimiento" | "flujo" | "docs";
 
@@ -27,9 +30,9 @@ interface Props {
 const STEPS = [
     { id: 'precalificacion', label: 'PRECALIFICACIÓN' },
     { id: 'solicitud', label: 'SOLICITUD' },
-    { id: 'evaluacion', label: 'EVALUACIÓN' },
     { id: 'demograficos', label: 'DATOS DEMOGRÁFICOS' },
-    { id: 'referencias', label: 'REFERENCIAS' },
+    { id: 'evaluacion', label: 'EVALUACIÓN' },
+    // { id: 'referencias', label: 'REFERENCIAS' },
     { id: 'garantes', label: 'GARANTES' },
 ];
 
@@ -84,7 +87,10 @@ export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack
 
         switch (activeStep) {
             case 'precalificacion': return <PrecalificacionSection id={requestId} />;
-            case 'solicitud': return <SolicitudSection />;
+            case 'solicitud': return <SolicitudSection numeroSolicitud={detalle?.number ?? ""}  />;
+            case 'demograficos': return <DemograficoSection numeroPreSolicitud={detalle?.preNumber ?? ""} />;
+            // case 'referencias': return <ReferenciasSection />;
+            case 'evaluacion': return <EvaluacionSection />;
             default: return <Typography sx={{ p: 2 }}>Módulo en desarrollo...</Typography>;
         }
     };

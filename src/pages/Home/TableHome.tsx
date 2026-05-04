@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect  } from "react";
 import {
     Box,
     TextField,
@@ -14,6 +14,7 @@ import {
     Select,
     MenuItem,
     Tooltip,
+    TablePagination
 } from "@mui/material";
 import { Dayjs } from "dayjs";
 
@@ -52,8 +53,9 @@ const money = (n: number) =>
 export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: TableHomeProps) => {
     const [buscar, setBuscar] = useState("");
     const [rowsPerPage, setRowsPerPage] = useState<number>(10);
-    const [orderBy, setOrderBy] = useState<SortKey>("fecha");
-    const [order, setOrder] = useState<Order>("asc");
+    const [page, setPage] = useState(0);
+    const [orderBy, setOrderBy] = useState<SortKey>("id");
+    const [order, setOrder] = useState<Order>("desc");
 
     const handleRequestSort = (key: SortKey) => {
         setOrder(orderBy === key && order === "asc" ? "desc" : "asc");
@@ -89,6 +91,10 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
         });
     }, [buscar, rows, cliente, startDate, endDate]);
 
+    useEffect(() => {
+        setPage(0);
+    }, [buscar, cliente, startDate, endDate]);
+
     const sorted = useMemo(() => {
         return [...filtered].sort((a, b) => {
             const av = a[orderBy], bv = b[orderBy];
@@ -103,7 +109,10 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
         });
     }, [filtered, order, orderBy]);
 
-    const visible = sorted.slice(0, rowsPerPage);
+    const visible = sorted.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
+    );
 
     return (
         <Box>
@@ -123,6 +132,8 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
                     >
                         <MenuItem value={10}>10</MenuItem>
                         <MenuItem value={20}>20</MenuItem>
+                        <MenuItem value={30}>30</MenuItem>
+                        <MenuItem value={40}>40</MenuItem>
                     </Select>
                 </FormControl>
             </Box>
@@ -211,6 +222,18 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
                     </TableBody>
                 </Table>
             </TableContainer>
+            <TablePagination
+                component="div"
+                count={sorted.length} // total de registros filtrados
+                page={page} // página actual
+                onPageChange={(_, newPage) => setPage(newPage)} // cambio de página
+                rowsPerPage={rowsPerPage} // cantidad por página
+                onRowsPerPageChange={(e) => {
+                    setRowsPerPage(parseInt(e.target.value, 10));
+                    setPage(0); // reset a página 1
+                }}
+                rowsPerPageOptions={[10, 20, 30, 40]} // opciones
+            />
         </Box>
     );
 };

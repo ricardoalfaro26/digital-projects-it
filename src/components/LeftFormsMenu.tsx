@@ -8,7 +8,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 // --- CONFIGURACIÓN DE DISEÑO ---
-export const LEFT_MENU_WIDTH = 260;
+export const LEFT_MENU_WIDTH = 200;
 const NAVBAR_HEIGHT = 80; // Ajustado a tu NavBar
 
 const MENU_BG = "#FFFFFF";

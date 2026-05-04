@@ -2,6 +2,8 @@
 import api from "../utils/api";
 import type { Detalle } from "../types/Detalle/detalle";
 import type { PrequalificationResponse } from "../types/Detalle/Prequalification/prequalification";
+import type { CreditDetailResponse } from "../types/Detalle/Solicitud/CreditDetailResponse";
+import type { Demografico } from "../types/Detalle/Demografico/Demografico";
 
 export const getActivityById = async (
   id: number
@@ -19,6 +21,29 @@ export const getPrequalificationById = async (
 
   const response = await api.get(
     `/application-process/prequalification/${id}`
+  );
+
+  return response.data.data;
+}
+
+export const getApplicationByNumeroSolicitud = async (
+  numeroSolicitud: string
+): Promise<CreditDetailResponse | null> => {
+
+  if (!numeroSolicitud) return null;
+  const response = await api.get(
+    `/application-process/application/${numeroSolicitud}`
+  );
+
+  return response.data.data;
+};
+
+export const getDemograficoByNumeroPreSolicitud = async (
+  numberoPreSolicitud: string
+): Promise<Demografico> => {
+
+  const response = await api.get(
+    `/application-process/demographic/${numberoPreSolicitud}`
   );
 
   return response.data.data;
