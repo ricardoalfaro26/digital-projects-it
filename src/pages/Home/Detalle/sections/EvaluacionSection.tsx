@@ -465,6 +465,8 @@ export const EvaluacionSection = () => {
         ingresosFamiliares: "—",
     };
 
+    //hola
+
     return (
         <Box sx={{ p: 1, maxWidth: 1000, mx: "auto" }}>
             <Grid container spacing={1}>
