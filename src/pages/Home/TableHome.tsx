@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect  } from "react";
 import {
     Box,
-    TextField,
     Table,
     TableBody,
     TableCell,
@@ -10,17 +9,17 @@ import {
     TableRow,
     TableSortLabel,
     IconButton,
+    Tooltip,
+    TablePagination,
     FormControl,
     Select,
-    MenuItem,
-    Tooltip,
-    TablePagination
+    MenuItem
 } from "@mui/material";
-import { Dayjs } from "dayjs";
+// import { Dayjs } from "dayjs";
 
 // Iconos para las acciones
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import TimelineIcon from "@mui/icons-material/Timeline";
+// import TimelineIcon from "@mui/icons-material/Timeline";
 import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
 
 export type HomeRow = {
@@ -42,17 +41,16 @@ type SortKey = keyof HomeRow;
 interface TableHomeProps {
     onAction: (client: HomeRow, tab: "seguimiento" | "flujo" | "docs") => void;
     rows: HomeRow[];
-    cliente: string;
-    startDate: Dayjs | null;
-    endDate: Dayjs | null;
+    // cliente: string;
+    // startDate: Dayjs | null;
+    // endDate: Dayjs | null;
 }
 
 const money = (n: number) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: TableHomeProps) => {
-    const [buscar, setBuscar] = useState("");
-    const [rowsPerPage, setRowsPerPage] = useState<number>(10);
+export const TableHome = ({ onAction, rows }: TableHomeProps) => {
+    const [rowsPerPage, setRowsPerPage] = useState<number>(6);
     const [page, setPage] = useState(0);
     const [orderBy, setOrderBy] = useState<SortKey>("id");
     const [order, setOrder] = useState<Order>("desc");
@@ -62,41 +60,8 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
         setOrderBy(key);
     };
 
-    const filtered = useMemo(() => {
-        const q = buscar.trim().toLowerCase();
-
-        return rows.filter((r) => {
-            // 🔎 filtro por buscador global
-            const matchesSearch = q
-                ? Object.values(r).join(" ").toLowerCase().includes(q)
-                : true;
-
-            // 🔎 filtro por cliente (input externo)
-            const matchesCliente = cliente
-                ? r.cliente.toLowerCase().includes(cliente.toLowerCase())
-                : true;
-
-            // 🔎 filtro por fechas
-            const rowDate = new Date(r.fecha); // ⚠️ asegúrate formato YYYY-MM-DD
-
-            const matchesStart = startDate
-                ? rowDate >= startDate.toDate()
-                : true;
-
-            const matchesEnd = endDate
-                ? rowDate <= endDate.toDate()
-                : true;
-
-            return matchesSearch && matchesCliente && matchesStart && matchesEnd;
-        });
-    }, [buscar, rows, cliente, startDate, endDate]);
-
-    useEffect(() => {
-        setPage(0);
-    }, [buscar, cliente, startDate, endDate]);
-
     const sorted = useMemo(() => {
-        return [...filtered].sort((a, b) => {
+        return [...rows].sort((a, b) => {
             const av = a[orderBy], bv = b[orderBy];
 
             if (typeof av === "number" && typeof bv === "number") {
@@ -107,37 +72,19 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
                 ? String(av).localeCompare(String(bv))
                 : String(bv).localeCompare(String(av));
         });
-    }, [filtered, order, orderBy]);
+    }, [rows, order, orderBy]);
 
     const visible = sorted.slice(
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
     );
 
+    useEffect(() => {
+        console.log("Ejecutando efecto");
+    }, []);
+
     return (
         <Box>
-            <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", gap: 2 }}>
-                <TextField
-                    size="small"
-                    placeholder="Buscar solicitud..."
-                    value={buscar}
-                    onChange={(e) => setBuscar(e.target.value)}
-                    sx={{ width: 320, "& .MuiInputBase-root": { height: 40, borderRadius: 2 } }}
-                />
-                <FormControl size="small">
-                    <Select
-                        value={rowsPerPage}
-                        onChange={(e) => setRowsPerPage(Number(e.target.value))}
-                        sx={{ height: 40, borderRadius: 2 }}
-                    >
-                        <MenuItem value={10}>10</MenuItem>
-                        <MenuItem value={20}>20</MenuItem>
-                        <MenuItem value={30}>30</MenuItem>
-                        <MenuItem value={40}>40</MenuItem>
-                    </Select>
-                </FormControl>
-            </Box>
-
             <TableContainer>
                 <Table stickyHeader size="small">
                     <TableHead>
@@ -153,17 +100,36 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
                                 { label: "Monto", key: "monto" },
                                 { label: "Gestor", key: "gestor" },
                             ].map((col) => (
-                                <TableCell key={col.key} sx={{ fontWeight: 700, fontSize: 12, bgcolor: "#fff" }}>
+                                <TableCell
+                                    key={col.key}
+                                    align="center"
+                                    sx={{
+                                        fontWeight: 700,
+                                        fontSize: 12,
+                                        bgcolor: "#fff"
+                                    }}
+                                >
                                     <TableSortLabel
                                         active={orderBy === col.key}
                                         direction={order}
                                         onClick={() => handleRequestSort(col.key as SortKey)}
+                                        sx={{
+                                            width: "100%",
+                                            display: "flex",
+                                            justifyContent: "center"
+                                        }}
                                     >
                                         {col.label}
                                     </TableSortLabel>
                                 </TableCell>
                             ))}
-                            <TableCell align="center" sx={{ fontWeight: 700, fontSize: 12, bgcolor: "#fff" }}>Acciones</TableCell>
+
+                            <TableCell
+                                align="center"
+                                sx={{ fontWeight: 700, fontSize: 12, bgcolor: "#fff" }}
+                            >
+                                Acciones
+                            </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -196,7 +162,7 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
                                             </IconButton>
                                         </Tooltip>
 
-                                        <Tooltip title="Ver Flujo">
+                                        {/* <Tooltip title="Ver Flujo">
                                             <IconButton
                                                 size="small"
                                                 onClick={() => onAction(r, 'flujo')}
@@ -204,7 +170,7 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
                                             >
                                                 <TimelineIcon fontSize="small" />
                                             </IconButton>
-                                        </Tooltip>
+                                        </Tooltip> */}
 
                                         <Tooltip title="Documentos">
                                             <IconButton
@@ -222,18 +188,44 @@ export const TableHome = ({ onAction, rows, cliente, startDate, endDate }: Table
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TablePagination
-                component="div"
-                count={sorted.length} // total de registros filtrados
-                page={page} // página actual
-                onPageChange={(_, newPage) => setPage(newPage)} // cambio de página
-                rowsPerPage={rowsPerPage} // cantidad por página
-                onRowsPerPageChange={(e) => {
-                    setRowsPerPage(parseInt(e.target.value, 10));
-                    setPage(0); // reset a página 1
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    px: 2,
+                    py: 1
                 }}
-                rowsPerPageOptions={[10, 20, 30, 40]} // opciones
-            />
+            >
+                {/* IZQUIERDA → rows per page */}
+                <FormControl size="small">
+                    <Select
+                        value={rowsPerPage}
+                        onChange={(e) => {
+                            setRowsPerPage(Number(e.target.value));
+                            setPage(0);
+                        }}
+                        sx={{ height: 36, width: 60, borderRadius: 2 }}
+                    >
+                        <MenuItem value={6}>6</MenuItem>
+                        <MenuItem value={12}>12</MenuItem>
+                        <MenuItem value={18}>18</MenuItem>
+                        <MenuItem value={24}>24</MenuItem>
+                        <MenuItem value={30}>30</MenuItem>
+                    </Select>
+                </FormControl>
+
+                {/* DERECHA → paginación */}
+                <TablePagination
+                    component="div"
+                    count={rows.length}
+                    page={page}
+                    onPageChange={(_, newPage) => setPage(newPage)}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={() => {}}
+                    rowsPerPageOptions={[]} // ocultamos selector interno
+                />
+            </Box>
         </Box>
     );
 };

@@ -19,6 +19,7 @@ export const DemograficoSection = ({ numeroPreSolicitud }: { numeroPreSolicitud:
                 setData(response);
             } catch (error) {
                 console.error("Error cargando demográfico", error);
+                setData(null);
             } finally {
                 setLoading(false);
             }
@@ -33,8 +34,12 @@ export const DemograficoSection = ({ numeroPreSolicitud }: { numeroPreSolicitud:
         return <div style={{ textAlign: "center", padding: 20 }}>Cargando...</div>;
     }
 
-    if (!data) {
-        return <div style={{ textAlign: "center", padding: 20 }}>Sin información demográfica</div>;
+    if (!data || !data.TieneInformacion) {
+        return (
+            <div style={{ textAlign: "center", padding: 20 }}>
+                {data?.Mensaje || "Sin información demográfica"}
+            </div>
+        );
     }
 
     // 🔥 Limpieza y fallback
@@ -86,12 +91,12 @@ export const DemograficoSection = ({ numeroPreSolicitud }: { numeroPreSolicitud:
                         </Grid>
                         <Grid container>
                             <Box sx={{ xs: 6 }}>
-                                <InfoField label="Número NRC" value={nrc} />
+                                <InfoField label="Número de NRC" value={nrc} />
                             </Box>
                         </Grid>
                         <Grid container>
                             <Box sx={{ xs: 6 }}>
-                                <InfoField label="Exento Impuestos" value={exento} highlight />
+                                <InfoField label="Exento de Impuestos" value={exento} highlight />
                             </Box>
                         </Grid>
                     </Paper>

@@ -5,4 +5,6 @@ export interface Demografico {
     tieneNRC: string;
     nrcNumber: string;
     excentoImpuestos: string;
+    TieneInformacion: boolean;
+    Mensaje: string;
 }

@@ -1,13 +1,15 @@
 // src/pages/Home/ProspeccionDashboard.tsx
 import dayjs, { Dayjs } from "dayjs";
-import React, { useState, useEffect } from "react";
 import { TableHome } from "./TableHome";
 import type { HomeRow } from "./TableHome";
 import { FormInput } from "../../components";
-import { getActivities, getSummary } from "../../services/dashboard.service";
-import type { DashboardSummary } from "../../types/Dashboard/dashboard";
+import React, { useState, useEffect } from "react";
+import SearchIcon from "@mui/icons-material/Search";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
-import { Box, Paper, Typography, Button, Card, Stack, Divider, Popover } from "@mui/material";
+import type { DashboardSummary } from "../../types/Dashboard/dashboard";
+import { getActivities, getSummary } from "../../services/dashboard.service";
+import { Box, Paper, Typography, Card, Stack, Divider, Popover, Tooltip, IconButton } from "@mui/material";
 
 interface Props {
     onAction: (client: HomeRow, tab: "seguimiento" | "flujo" | "docs") => void;
@@ -27,10 +29,59 @@ export const ProspeccionDashboard: React.FC<Props> = ({ onAction }) => {
 
     // --- ESTADO PARA RESUMEN ---
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
-
     const [rows, setRows] = useState<HomeRow[]>([]);
 
-    // --- EFECTO PARA CARGAR RESUMEN ---
+    const fetchRows = async (filters?: {
+        startDate?: Dayjs | null;
+        endDate?: Dayjs | null;
+        cliente?: string;
+    }) => {
+        try {
+            const data = await getActivities({
+                startDate: filters?.startDate
+                    ? filters.startDate.format("YYYY-MM-DD")
+                    : undefined,
+                endDate: filters?.endDate
+                    ? filters.endDate.format("YYYY-MM-DD")
+                    : undefined,
+                client: filters?.cliente || undefined,
+            });
+
+            const mapped: HomeRow[] = data.map(item => ({
+                id: item.id,
+                fecha: item.date,
+                hora: item.time,
+                numero: item.number,
+                cliente: item.client,
+                etapa: item.stage,
+                grupo: item.group,
+                tipoSolicitud: item.type,
+                monto: item.amount ?? 0,
+                gestor: item.manager,
+            }));
+
+            setRows(mapped);
+        } catch (error) {
+            console.error("Error cargando actividad", error);
+        }
+    };
+
+    const handleSearch = () => {
+        fetchRows({
+            startDate,
+            endDate,
+            cliente
+        });
+    };
+
+    const handleReset = () => {
+        setStartDate(null);
+        setEndDate(null);
+        setCliente("");
+
+        fetchRows({});
+    };
+
     useEffect(() => {
         const fetchSummary = async () => {
             try {
@@ -45,29 +96,7 @@ export const ProspeccionDashboard: React.FC<Props> = ({ onAction }) => {
     }, []);
 
     useEffect(() => {
-        const fetchRows = async () => {
-            try {
-                const data = await getActivities();
-                const mapped: HomeRow[] = data.map(item => ({
-                    id: item.id,
-                    fecha: item.date,
-                    hora: item.time,
-                    numero: item.number,
-                    cliente: item.client,
-                    etapa: item.stage,
-                    grupo: item.group,
-                    tipoSolicitud: item.type,
-                    monto: item.amount ?? 0,
-                    gestor: item.manager,
-                }));
-                //console.log(mapped);
-                setRows(mapped);
-            } catch (error) {
-                console.error("Error cargando actividad", error);
-            }
-        };
-
-        fetchRows();
+        fetchRows({});
     }, []);
 
     return (
@@ -116,10 +145,10 @@ export const ProspeccionDashboard: React.FC<Props> = ({ onAction }) => {
                         <Box sx={{ flex: 2 }}>
                             <FormInput 
                                 identifier="c" 
-                                label="Cliente" 
+                                label="Buscar por: " 
                                 value={cliente} 
                                 onValueChange={(_, v) => setCliente(v)} 
-                                placeholder="Nombre o ID" // placeholder fuera de textFieldProps
+                                placeholder="Solicitud, Documento" // placeholder fuera de textFieldProps
                                 textFieldProps={{ 
                                     size: "small", 
                                     fullWidth: true,
@@ -128,13 +157,33 @@ export const ProspeccionDashboard: React.FC<Props> = ({ onAction }) => {
                             />
                         </Box>
 
-                        <Button 
-                            variant="contained" 
-                            type="button" 
-                            sx={{ height: INPUT_HEIGHT, px: 4, borderRadius: 2, bgcolor: "#1A73E8", textTransform: "none", fontWeight: 700, boxShadow: "none" }}
-                        >
-                            Buscar
-                        </Button>
+                        <Tooltip title="Buscar">
+                            <IconButton
+                                onClick={handleSearch}
+                                sx={{
+                                    height: INPUT_HEIGHT,
+                                    width: INPUT_HEIGHT,
+                                    bgcolor: "#1A73E8",
+                                    color: "#fff",
+                                    "&:hover": { bgcolor: "#1669c1" }
+                                }}
+                            >
+                                <SearchIcon />
+                            </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title="Limpiar filtros">
+                            <IconButton
+                                onClick={handleReset}
+                                sx={{
+                                    height: INPUT_HEIGHT,
+                                    width: INPUT_HEIGHT,
+                                    border: "1px solid #ddd"
+                                }}
+                            >
+                                <RestartAltIcon />
+                            </IconButton>
+                        </Tooltip>
                     </Box>
                 </Paper>
 
@@ -148,9 +197,7 @@ export const ProspeccionDashboard: React.FC<Props> = ({ onAction }) => {
                         <Stack spacing={1.2}>
                             {[
                                 // ✅ CAMBIO: valores ahora vienen del backend
-                                { label: "Solicitudes", val: summary?.totalApplications ?? 0, color: "#1A73E8" }, 
-                                { label: "Aprobadas", val: summary?.approved ?? 0, color: "#2E7D32" }, 
-                                { label: "Pendientes", val: summary?.pending ?? 0, color: "#ED6C02" }
+                                { label: "Solicitudes", val: summary?.totalApplications ?? 0, color: "#1A73E8" },
                             ].map((item, i) => (
                                 <Box key={item.label}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -176,9 +223,6 @@ export const ProspeccionDashboard: React.FC<Props> = ({ onAction }) => {
                 <TableHome 
                     onAction={onAction}
                     rows={rows}
-                    cliente={cliente}
-                    startDate={startDate}
-                    endDate={endDate}
                 />
             </Card>
 

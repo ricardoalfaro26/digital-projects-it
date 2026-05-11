@@ -33,7 +33,7 @@ const STEPS = [
     { id: 'demograficos', label: 'DATOS DEMOGRÁFICOS' },
     { id: 'evaluacion', label: 'EVALUACIÓN' },
     // { id: 'referencias', label: 'REFERENCIAS' },
-    { id: 'garantes', label: 'GARANTES' },
+    // { id: 'garantes', label: 'GARANTES' },
 ];
 
 export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack }) => {
@@ -90,7 +90,7 @@ export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack
             case 'solicitud': return <SolicitudSection numeroSolicitud={detalle?.number ?? ""}  />;
             case 'demograficos': return <DemograficoSection numeroPreSolicitud={detalle?.preNumber ?? ""} />;
             // case 'referencias': return <ReferenciasSection />;
-            case 'evaluacion': return <EvaluacionSection />;
+            case 'evaluacion': return <EvaluacionSection numeroPreSolicitud={detalle?.preNumber ?? ""} />;
             default: return <Typography sx={{ p: 2 }}>Módulo en desarrollo...</Typography>;
         }
     };
@@ -132,7 +132,7 @@ export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack
                         </Box>
                         
                         <Stack direction="row" spacing={1}>
-                             {(['seguimiento', 'flujo', 'docs'] as TabType[]).map((t) => (
+                             {(['seguimiento', /*'flujo',*/ 'docs'] as TabType[]).map((t) => (
                                 <Button 
                                     key={t}
                                     variant={activeTab === t ? "contained" : "outlined"}
@@ -199,10 +199,10 @@ export const DetalleSolicitud: React.FC<Props> = ({ clientId, initialTab, onBack
                     {/* ✅ CORRECCIÓN: Se usa 'size' en el panel derecho */}
                     <Grid size={{ xs: 12, md: activeTab === 'seguimiento' ? 3 : 2.5 }}>
                         <Stack spacing={3}>
-                            <Paper elevation={0} sx={{ p: 2, border: "1px solid #E5E7EB", textAlign: 'center', borderRadius: 2 }}>
+                            {/* <Paper elevation={0} sx={{ p: 2, border: "1px solid #E5E7EB", textAlign: 'center', borderRadius: 2 }}>
                                 <Typography variant="h5" color="error" fontWeight={900}>{detalle?.days} días</Typography>
                                 <Typography variant="caption" fontWeight={700} color="text.secondary">TIEMPO EN ETAPA ACTUAL</Typography>
-                            </Paper>
+                            </Paper> */}
                             <Paper elevation={0} sx={{ p: 2, border: "1px solid #E5E7EB", borderRadius: 2, bgcolor: '#F9FAFB' }}>
                                 <Typography variant="caption" fontWeight={800} color="text.secondary" display="block" sx={{ mb: 1 }}>NOTAS</Typography>
                                 <Typography variant="caption" sx={{ color: '#4B5563', fontStyle: 'italic' }}>Información ingresada el {detalle?.entryDate}.</Typography>
